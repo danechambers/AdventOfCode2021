@@ -10,7 +10,7 @@ namespace Dec2021.Day2
         [Test]
         public void Test1()
         {
-            var directions = File.ReadAllLines("/home/dane/Source/AdventOfCode/Dec2021/day2input");
+            var directions = File.ReadAllLines("/home/dane/Source/AdventOfCode2021/Dec2021/Day2/day2input");
 
             var(horizontalMovement, verticalMovement, _) = 
                 directions
