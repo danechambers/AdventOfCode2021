@@ -5,7 +5,7 @@ using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Dec2021
+namespace Dec2021.Day3
 {
     [TestFixture]
     public class Day3Tests
@@ -13,7 +13,7 @@ namespace Dec2021
         [Test]
         public void Test1()
         {
-            var answer = 
+            var answer =
                 File.ReadAllLines("/home/dane/Source/AdventOfCode/Dec2021/day3input")
                     .CreateDataTableFromFile()
                     .SelectBits()

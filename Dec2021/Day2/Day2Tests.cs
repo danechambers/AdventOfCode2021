@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Dec2021
+namespace Dec2021.Day2
 {
     [TestFixture]
     public class Day2Tests
