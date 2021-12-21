@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 using static Dec2021.Day3.EnumerableExtensions;
+using static Dec2021.Helpers;
 
 namespace Dec2021.Day3
 {
@@ -16,7 +16,7 @@ namespace Dec2021.Day3
         public void Part1()
         {
             var answer =
-                File.ReadAllLines("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input")
+                ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input")
                     .CreateDataTableFromFile()
                     .SelectBits()
                     .MapBitsToTablePosition()
@@ -33,7 +33,7 @@ namespace Dec2021.Day3
         [Test]
         public async Task Part2()
         {
-            var fileDataStream = File.ReadAllLines("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input");
+            var fileDataStream = ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input");
             var data =
                     fileDataStream
                     .CreateDataTableFromFile()
@@ -52,16 +52,16 @@ namespace Dec2021.Day3
             TestContext.WriteLine($"The answer is {oxygenGeneratorRating.Result * c02ScrubberRating.Result}");
         }
 
-        [TestCase(7,3, ExpectedResult = '1')]
-        [TestCase(3,7, ExpectedResult = '0')]
-        [TestCase(3,3, ExpectedResult = '1')]
+        [TestCase(7, 3, ExpectedResult = '1')]
+        [TestCase(3, 7, ExpectedResult = '0')]
+        [TestCase(3, 3, ExpectedResult = '1')]
         public char OxygenSanityCheck(int count1s, int count0s) =>
             OxygenGeneratorBitCriteria(count1s, count0s);
 
 
-        [TestCase(7,3, ExpectedResult = '0')]
-        [TestCase(3,7, ExpectedResult = '1')]
-        [TestCase(3,3, ExpectedResult = '0')]
+        [TestCase(7, 3, ExpectedResult = '0')]
+        [TestCase(3, 7, ExpectedResult = '1')]
+        [TestCase(3, 3, ExpectedResult = '0')]
         public char C02SanityCheck(int count1s, int count0s) =>
             C02ScrubberBitCriteria(count1s, count0s);
     }
@@ -71,7 +71,7 @@ namespace Dec2021.Day3
         public static Func<string, int> ConvertStringToInt => value => Convert.ToInt32(value, 2);
 
         public static (IEnumerable<(int ColumnIndex, int RowIndex, char Value)> DataMeta, char[][] DataTable) MapBitsToTablePosition(
-            this (IEnumerable<char> BitStream, char[][] DataTable) data ) =>
+            this (IEnumerable<char> BitStream, char[][] DataTable) data) =>
             (data.BitStream.BitIterator(data.DataTable.Length), data.DataTable);
 
         public static IEnumerable<(int ColumnIndex, int RowIndex, char Value)> BitIterator(this IEnumerable<char> bits, int columnReset)
@@ -79,11 +79,11 @@ namespace Dec2021.Day3
             int columnIndex = 0,
                 rowIndex = 0;
 
-            foreach(var bit in bits)
+            foreach (var bit in bits)
             {
                 yield return (columnIndex, rowIndex, bit);
 
-                if(++columnIndex == columnReset)
+                if (++columnIndex == columnReset)
                 {
                     columnIndex = 0;
                     rowIndex++;
@@ -92,15 +92,15 @@ namespace Dec2021.Day3
         }
 
         public static char[][] FillDataTable(
-            this (IEnumerable<(int ColumnIndex, int RowIndex, char Value)> DataMeta, char[][] DataTable) data ) =>
-                data.DataMeta.Aggregate(data.DataTable, (table, meta) => 
+            this (IEnumerable<(int ColumnIndex, int RowIndex, char Value)> DataMeta, char[][] DataTable) data) =>
+                data.DataMeta.Aggregate(data.DataTable, (table, meta) =>
                 {
                     table[meta.ColumnIndex][meta.RowIndex] = meta.Value;
                     return table;
                 });
 
         public static (IEnumerable<char> BitStream, char[][] DataTable) SelectBits(
-            this (string[] DataStream, char[][] DataTable) data) =>
+            this (IReadOnlyList<string> DataStream, char[][] DataTable) data) =>
             (data.DataStream.SelectMany(bits => bits.ToCharArray()), data.DataTable);
 
         public static IEnumerable<(int Count1s, int Count0s)> GetBitCounts(this char[][] data) =>
@@ -109,9 +109,9 @@ namespace Dec2021.Day3
         public static int GetCountOf1s(this IEnumerable<char> bits) => bits.Count(value => value == '1');
         public static int GetCountOf0s(this IEnumerable<char> bits) => bits.Count(value => value == '0');
 
-        public static (string[] DataStream, char[][] DataTable) CreateDataTableFromFile(this string[] fileData)
-            => (fileData, fileData.First().ToCharArray().Select(_ => new char[fileData.Length]).ToArray());
-    
+        public static (IReadOnlyList<string> DataStream, char[][] DataTable) CreateDataTableFromFile(this IReadOnlyList<string> fileData)
+            => (fileData, fileData.First().ToCharArray().Select(_ => new char[fileData.Count]).ToArray());
+
         public static string GetStringFromChars(this IEnumerable<char> chars) => new string(chars.ToArray());
 
         public static char GetGamma(int count1s, int count0s) => count1s > count0s ? '1' : '0';
@@ -141,13 +141,18 @@ namespace Dec2021.Day3
         public static Task<int> GetLifeSupportRatingWithBitCriteria(
             this char[][] dataTable,
             Func<int, int, char> getBitCriteria,
-            string[] fileData)
+            IReadOnlyList<string> fileData) =>
+            Task.Run(() =>
+                ConvertStringToInt(
+                    fileData[dataTable.GetFileDataRowIndex(getBitCriteria)]));
+
+        public static int GetFileDataRowIndex(this char[][] dataTable, Func<int, int, char> getBitCriteria)
         {
             var dataRowIndexes = new HashSet<int>(Enumerable.Range(0, dataTable[0].Length));
 
-            foreach(var tableColumn in dataTable)
+            foreach (var tableColumn in dataTable)
             {
-                if(dataRowIndexes.Count == 1)
+                if (dataRowIndexes.Count == 1)
                     break;
 
                 var count0s = dataRowIndexes.Select(rowIndex => tableColumn[rowIndex]).GetCountOf0s();
@@ -157,7 +162,7 @@ namespace Dec2021.Day3
                 dataRowIndexes.IntersectWith(dataRowIndexes.Where(rowIndex => tableColumn[rowIndex] == critera));
             }
 
-            return Task.FromResult(ConvertStringToInt(fileData[dataRowIndexes.Single()]));
+            return dataRowIndexes.Single();
         }
     }
 }
