@@ -13,10 +13,11 @@ namespace Dec2021.Day3
     public class Day3Tests
     {
         [Test]
-        public void Part1()
+        public async Task Part1()
         {
             var answer =
-                ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input")
+                (await GetDataUri("Day3/day3input")
+                    .GetDataAsync())
                     .CreateDataTableFromFile()
                     .SelectBits()
                     .MapBitsToTablePosition()
@@ -33,7 +34,8 @@ namespace Dec2021.Day3
         [Test]
         public async Task Part2()
         {
-            var fileDataStream = ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day3/day3input");
+            var fileDataStream = await GetDataUri("Day3/day3input").GetDataAsync();
+
             var data =
                     fileDataStream
                     .CreateDataTableFromFile()

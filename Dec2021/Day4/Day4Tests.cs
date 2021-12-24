@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 using static Dec2021.Helpers;
@@ -11,9 +12,10 @@ namespace Dec2021.Day4
     public class Day4Tests
     {
         [Test]
-        public void Part1()
+        public async Task Part1()
         {
-            var fileData = ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day4/day4input");
+            var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
+
             var bingoNumbers = fileData.First().Split(',')
                 .Select(value => int.Parse(value))
                 .Select<int, BoardNumber>(value => new(value, true))

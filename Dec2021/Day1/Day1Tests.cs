@@ -1,20 +1,22 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
+using static Dec2021.Helpers;
 
 namespace Dec01;
 
 public class Day1Tests
 {
     [Test]
-    public void Test1()
+    public async Task Test1()
     {
         var countOfIncreases = 0;
 
         var comparisonQueue = new Queue<int>(4);
-        var fileData = File.ReadAllLines("/home/dane/Source/AdventOfCode-Dec2021/Dec01/Day1/input");
+        var fileData = await GetDataUri("Day1/day1input").GetDataAsync();
+
         fileData
             .Select(row =>
             {

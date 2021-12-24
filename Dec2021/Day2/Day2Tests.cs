@@ -1,6 +1,7 @@
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
+using static Dec2021.Helpers;
 
 namespace Dec2021.Day2
 {
@@ -8,9 +9,9 @@ namespace Dec2021.Day2
     public class Day2Tests
     {
         [Test]
-        public void Test1()
+        public async Task Test1()
         {
-            var directions = File.ReadAllLines("/home/dane/Source/AdventOfCode2021/Dec2021/Day2/day2input");
+            var directions = await GetDataUri("Day2/day2input").GetDataAsync();
 
             var(horizontalMovement, verticalMovement, _) = 
                 directions
