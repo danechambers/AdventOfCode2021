@@ -25,48 +25,56 @@ namespace Dec2021.Day4
         }
 
         [Test]
+        public async Task FindBingoNumerInGameBoard_ShouldWork()
+        {
+            var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
+            var gameBoard = fileData.GetGameBoards(MAGIC_NUMBER).First();
+
+            GameBoardValue testValue = new(new(2, 2), new(58, false));
+
+            gameBoard
+                .GetBingoNumbersFromGameBoard(testValue.Number)
+                .Single()
+                .ShouldBeEquivalentTo(testValue);
+        }
+
+        [Test]
         public async Task Part1()
         {
             var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
-
-            var bingoNumbers = fileData.First().Split(',')
-                .Select(value => int.Parse(value))
-                .Select<int, BoardNumber>(value => new(value, false));
-
+            var bingoNumbers = fileData.GetBingoNumbers();
             var gameBoards = fileData.GetGameBoards(MAGIC_NUMBER).ToImmutableArray();
 
-            // var bingoNumber = bingoNumbers.First(num => num.Value == 7);
-            // var gameBoard = gameBoards.First();
-
-            // var (boardPosition, boardValue) = gameBoard.BoardNumberIterator().First(board => board.Number.Value == bingoNumber.Value);
-            // gameBoard.Update(boardPosition, boardValue with { Found = bingoNumber.Found });
-
-            int winningIndex = -1;
+            int? winningIndex = null;
+            BoardNumber? winningNumber = null;
 
             foreach (var bingoNumber in bingoNumbers)
             {
-                var result = Parallel.For(0, gameBoards.Length, (index, state) =>
+                var result = Parallel.ForEach(gameBoards, (gameBoard, state, index) =>
                 {
-                    var gameBoard = gameBoards[index];
-                    var boardValues =
-                        gameBoard.BoardNumberIterator().Where(value => value.Number == bingoNumber);
-
-                    foreach (var boardValue in boardValues)
+                    var hasUpdate = false;
+                    foreach (var boardValue in gameBoard.GetBingoNumbersFromGameBoard(bingoNumber))
                     {
+                        if (!hasUpdate)
+                            hasUpdate = true;
+
                         var (boardPosition, boardNumber) = boardValue;
                         gameBoard.Update(boardPosition, boardNumber with { Found = true });
                     }
 
-                    ImmutableInterlocked.Update(ref gameBoards, boards => boards.SetItem(index, gameBoard));
-
-                    for (var i = 0; i < MAGIC_NUMBER; i++)
+                    if (hasUpdate)
                     {
-                        var foundXWinner = gameBoard.BoardNumberIterator().Where(boardValue => boardValue.Position.x == index).All(value => value.Number.Found);
-                        var foundYWinner = gameBoard.BoardNumberIterator().Where(boardValue => boardValue.Position.y == index).All(value => value.Number.Found);
-                        if (foundXWinner || foundYWinner)
+                        ImmutableInterlocked.Update(ref gameBoards, boards => boards.SetItem((int)index, gameBoard));
+
+                        for (var i = 0; i < MAGIC_NUMBER; i++)
                         {
-                            state.Break();
-                            break;
+                            var foundXWinner = gameBoard.BoardNumberIterator().Where(boardValue => boardValue.Position.x == i).All(value => value.Number.Found);
+                            var foundYWinner = gameBoard.BoardNumberIterator().Where(boardValue => boardValue.Position.y == i).All(value => value.Number.Found);
+                            if (foundXWinner || foundYWinner)
+                            {
+                                state.Break();
+                                break;
+                            }
                         }
                     }
                 });
@@ -74,11 +82,25 @@ namespace Dec2021.Day4
                 if (result.LowestBreakIteration is long breakIndex)
                 {
                     winningIndex = (int)breakIndex;
+                    winningNumber = bingoNumber;
                     break;
                 }
             }
 
-            winningIndex.ShouldBeGreaterThanOrEqualTo(0);
+            if(winningIndex is null || winningNumber is null)
+            {
+                Assert.Fail("No winner found");
+                return;
+            }
+
+            var unmarkedSum =
+                gameBoards[winningIndex.Value].BoardNumberIterator()
+                    .Where(value => !value.Number.Found)
+                    .Sum(value => value.Number.Value);
+
+            var answer = unmarkedSum * winningNumber.Value;
+            TestContext.WriteLine($"The answer is {answer}");
+            answer.ShouldBe(45031);
         }
     }
 
@@ -130,6 +152,16 @@ namespace Dec2021.Day4
                 .Select<int, BoardNumber>(value => new(value))
                 .Select((number, index) => (Number: number, NumberIndex: index % magicNumber))
                 .BoardGameIterator(magicNumber);
+
+        public static IEnumerable<GameBoardValue> GetBingoNumbersFromGameBoard(
+            this BoardNumber[,] gameBoard,
+             BoardNumber number) =>
+            gameBoard.BoardNumberIterator().Where(value => value.Number == number);
+
+        public static IEnumerable<BoardNumber> GetBingoNumbers(this IEnumerable<string> fileData) =>
+            fileData.First().Split(',')
+                .Select(value => int.Parse(value))
+                .Select<int, BoardNumber>(value => new(value, false));
     }
 
     public record BoardNumber(int Value, bool Found = false);
