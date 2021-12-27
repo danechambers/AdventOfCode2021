@@ -37,7 +37,8 @@ public class Day4Tests
             fileData
                 .GetBingoNumbers()
                 .FindWinningBoard(gameBoards, BINGO_SQUARE_LENGTH)
-                .Select(result => CalculateAnswer(result.GameBoards, result.PossibleWinner!))
+                .SelectMany(result => result.Winners, (result, winner) => (GameBoards: result.GameBoards, Winner: winner))
+                .Select(result => CalculateAnswer(result.GameBoards, result.Winner))
                 .First();
 
         TestContext.WriteLine($"The answer is {answer}");
@@ -47,21 +48,18 @@ public class Day4Tests
     [Test]
     public async Task Part2()
     {
-        // var fileData = ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day4/sampleinput");
         var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
         var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableArray();
 
-        var winningBoards =
-            fileData
-                .GetBingoNumbers()
+        var answer =
+            fileData.GetBingoNumbers()
                 .FindWinningBoard(gameBoards, BINGO_SQUARE_LENGTH)
-                .ToArray();
+                .SelectMany(result => result.Winners, (result, winner) => (GameBoards: result.GameBoards, Winner: winner))
+                .Select(result => CalculateAnswer(result.GameBoards, result.Winner))
+                .Last();
 
-        var answer = winningBoards
-            .Select(result => CalculateAnswer(result.GameBoards, result.PossibleWinner!))
-            .ToArray();
-
-        TestContext.WriteLine($"The answer is {answer.Last()}");
+        TestContext.WriteLine($"The answer is {answer}");
+        answer.ShouldBe(2568);
     }
 }
 
@@ -167,7 +165,7 @@ public static class Day4Extensions
         ImmutableArray<GameBoard> gameBoards,
         int bingoSquareLength)
     {
-        var winnerGameBoardIndexTracker = new HashSet<int>();
+        var winnerGameBoardIndexTracker = ImmutableHashSet<int>.Empty;
 
         foreach (var bingoNumber in bingoNumbers)
         {
@@ -176,74 +174,14 @@ public static class Day4Extensions
                 bingoSquareLength,
                 winnerGameBoardIndexTracker);
 
-            if (result.PossibleWinner is not null)
-            {
-                yield return result;
-                winnerGameBoardIndexTracker.Add(
-                    result.PossibleWinner.WinningGameBoardIndex);
+            yield return result;
 
-                if (winnerGameBoardIndexTracker.Count == result.GameBoards.Length)
-                    yield break;
-            }
+            winnerGameBoardIndexTracker =
+                winnerGameBoardIndexTracker
+                    .Union(result.Winners.Select(winner => winner.WinningGameBoardIndex));
 
             gameBoards = result.GameBoards;
         }
-    }
-
-    public static BingoWinner? GetFirstWinner(
-        this BoardNumber bingoNumber,
-        ImmutableArray<GameBoard> gameBoards,
-        int bingoSquareLength)
-    {
-        var result =
-            Parallel.ForEach(gameBoards, (gameBoard, state, index) =>
-            {
-                var foundWinner =
-                    gameBoard.Values
-                        .Where(boardValue => boardValue.Number == bingoNumber)
-                        .MarkNumbersFoundOnBoard(gameBoard)
-                        .UpdateGameBoard(ref gameBoards, (int)index)
-                        .CheckForWinner(bingoSquareLength);
-
-                if (foundWinner)
-                    state.Break();
-            });
-
-        if (result.LowestBreakIteration.HasValue)
-        {
-            var breakIndex = (int)result.LowestBreakIteration.Value;
-            return new(bingoNumber, breakIndex);
-        }
-
-        return null;
-    }
-
-    public static (ImmutableArray<GameBoard> GameBoards, BingoWinner? Winner) GetFirstWinner2(
-    this BoardNumber bingoNumber,
-    ImmutableArray<GameBoard> gameBoards,
-    int bingoSquareLength)
-    {
-        var result =
-            Parallel.ForEach(gameBoards, (gameBoard, state, index) =>
-            {
-                var foundWinner =
-                    gameBoard.Values
-                        .Where(boardValue => boardValue.Number == bingoNumber)
-                        .MarkNumbersFoundOnBoard(gameBoard)
-                        .UpdateGameBoard(ref gameBoards, (int)index)
-                        .CheckForWinner(bingoSquareLength);
-
-                if (foundWinner)
-                    state.Break();
-            });
-
-        if (result.LowestBreakIteration.HasValue)
-        {
-            var breakIndex = (int)result.LowestBreakIteration.Value;
-            return (gameBoards, new(bingoNumber, breakIndex));
-        }
-
-        return (gameBoards, null);
     }
 
     public static WinnerCheckResult TryGetWinner(
@@ -271,11 +209,10 @@ public static class Day4Extensions
                 winnersFoundFromUpdate.Enqueue(new(bingoNumber, gameBoardIndex));
         });
 
-        var winnerFound = winnersFoundFromUpdate.TryDequeue(out var winner);
-        if (winnerFound)
-            return new(gameBoards, winner);
-        else
-            return new(gameBoards, null);
+        if (winnersFoundFromUpdate.Count > 1)
+            TestContext.WriteLine($"{bingoNumber.Value} - Found more than {winnersFoundFromUpdate.Count} winners");
+
+        return new(gameBoards, winnersFoundFromUpdate.ToImmutableHashSet());
     }
 
     public static int CalculateAnswer(IReadOnlyList<GameBoard> gameBoards, BingoWinner winner)
