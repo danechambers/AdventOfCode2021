@@ -31,14 +31,13 @@ public class Day4Tests
     public async Task Part1()
     {
         var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
-        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableArray();
+        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableHashSet();
 
         var answer =
             fileData
                 .GetBingoNumbers()
-                .FindWinningBoard(gameBoards, BINGO_SQUARE_LENGTH)
-                .SelectMany(result => result.Winners, (result, winner) => (GameBoards: result.GameBoards, Winner: winner))
-                .Select(result => CalculateAnswer(result.GameBoards, result.Winner))
+                .FindWinningBoards(gameBoards, BINGO_SQUARE_LENGTH)
+                .Select(CalculateAnswer)
                 .First();
 
         TestContext.WriteLine($"The answer is {answer}");
@@ -49,13 +48,13 @@ public class Day4Tests
     public async Task Part2()
     {
         var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
-        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableArray();
+        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableHashSet();
 
         var answer =
-            fileData.GetBingoNumbers()
-                .FindWinningBoard(gameBoards, BINGO_SQUARE_LENGTH)
-                .SelectMany(result => result.Winners, (result, winner) => (GameBoards: result.GameBoards, Winner: winner))
-                .Select(result => CalculateAnswer(result.GameBoards, result.Winner))
+            fileData
+                .GetBingoNumbers()
+                .FindWinningBoards(gameBoards, BINGO_SQUARE_LENGTH)
+                .Select(CalculateAnswer)
                 .Last();
 
         TestContext.WriteLine($"The answer is {answer}");
@@ -116,21 +115,6 @@ public static class Day4Extensions
                 return currentBoard with { Values = newBoardValues, BingoNumberFound = true };
             });
 
-    public static GameBoard UpdateGameBoard(
-        this GameBoard data,
-        ref ImmutableArray<GameBoard> gameBoardData,
-        int index)
-    {
-        if (data.BingoNumberFound)
-            ImmutableInterlocked.Update(
-                ref gameBoardData,
-                // reset the updated flag back to false in order to ensure that we don't accidentially
-                // think a bingo number was found on the board on the next loop
-                boards => boards.SetItem(index, data with { BingoNumberFound = false }));
-
-        return data;
-    }
-
     public static bool AllBoardNumbersAreMarked(
         this IEnumerable<GameBoardValue> gameBoard,
         Func<BoardPosition, bool> isTargetPosition) =>
@@ -160,70 +144,57 @@ public static class Day4Extensions
         return isWinner;
     }
 
-    public static IEnumerable<WinnerCheckResult> FindWinningBoard(
+    public static ImmutableArray<BingoWinner> FindWinningBoards(
         this IEnumerable<BoardNumber> bingoNumbers,
-        ImmutableArray<GameBoard> gameBoards,
+        IImmutableSet<GameBoard> gameBoards,
         int bingoSquareLength)
     {
-        var winnerGameBoardIndexTracker = ImmutableHashSet<int>.Empty;
+        var allWinners = ImmutableList<BingoWinner>.Empty.ToBuilder();
 
         foreach (var bingoNumber in bingoNumbers)
         {
-            var result = bingoNumber.TryGetWinner(
-                gameBoards,
-                bingoSquareLength,
-                winnerGameBoardIndexTracker);
-
-            yield return result;
-
-            winnerGameBoardIndexTracker =
-                winnerGameBoardIndexTracker
-                    .Union(result.Winners.Select(winner => winner.WinningGameBoardIndex));
-
-            gameBoards = result.GameBoards;
+            var (updatedGameBoards, winners) = bingoNumber.GetWinnners(gameBoards, bingoSquareLength);
+            allWinners.AddRange(winners);
+            gameBoards = updatedGameBoards.Except(winners.Select(winner => winner.WinningGameBoard));
         }
+
+        return allWinners.ToImmutableArray();
     }
 
-    public static WinnerCheckResult TryGetWinner(
+    public static (IImmutableSet<GameBoard> GameBoards, IEnumerable<BingoWinner> Winners) GetWinnners(
         this BoardNumber bingoNumber,
-        ImmutableArray<GameBoard> gameBoards,
-        int bingoSquareLength,
-        IReadOnlySet<int> previousWinners)
+        IImmutableSet<GameBoard> gameBoards,
+        int bingoSquareLength)
     {
         var winnersFoundFromUpdate = new ConcurrentQueue<BingoWinner>();
 
-        Parallel.ForEach(gameBoards, (gameBoard, _, index) =>
+        Parallel.ForEach(gameBoards, gameBoard =>
         {
-            int gameBoardIndex = (int)index;
-            if (previousWinners.Contains(gameBoardIndex))
-                return;
-
-            var foundWinner =
+            var markedGameBoard =
                 gameBoard.Values
                     .Where(boardValue => boardValue.Number == bingoNumber)
-                    .MarkNumbersFoundOnBoard(gameBoard)
-                    .UpdateGameBoard(ref gameBoards, gameBoardIndex)
-                    .CheckForWinner(bingoSquareLength);
+                    .MarkNumbersFoundOnBoard(gameBoard);
 
-            if (foundWinner)
-                winnersFoundFromUpdate.Enqueue(new(bingoNumber, gameBoardIndex));
+            ImmutableInterlocked.Update(ref gameBoards,
+                board => board.Remove(gameBoard).Add(markedGameBoard));
+
+            if (markedGameBoard.CheckForWinner(bingoSquareLength))
+                winnersFoundFromUpdate.Enqueue(new(bingoNumber, markedGameBoard));
         });
 
-        if (winnersFoundFromUpdate.Count > 1)
-            TestContext.WriteLine($"{bingoNumber.Value} - Found more than {winnersFoundFromUpdate.Count} winners");
-
-        return new(gameBoards, winnersFoundFromUpdate.ToImmutableHashSet());
+        return (gameBoards, winnersFoundFromUpdate);
     }
 
-    public static int CalculateAnswer(IReadOnlyList<GameBoard> gameBoards, BingoWinner winner)
+    public static int CalculateAnswer(BingoWinner winner)
     {
-        var winningNumber = winner.WinningNumber.Value;
+        var (winningNumber, winningGameBoard) = winner;
+
         var unmarkedSum =
-            gameBoards[winner.WinningGameBoardIndex]
+            winningGameBoard
                 .Values
                 .Where(value => !value.Number.Marked)
                 .Sum(value => value.Number.Value);
 
-        return winningNumber * unmarkedSum;
+        return winningNumber.Value * unmarkedSum;
     }
 }
