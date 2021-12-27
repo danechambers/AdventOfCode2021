@@ -2,12 +2,16 @@ namespace Dec2021.Day4.Models;
 
 public record BingoWinner
 {
-    public BingoWinner(BoardNumber winningNumber, GameBoard winningBoard)
+    public BingoWinner(BoardNumber winningNumber, int winningGameBoardIndex)
     {
         WinningNumber = winningNumber;
-        WinningBoard = winningBoard;
+        WinningGameBoardIndex = winningGameBoardIndex;
     }
 
     public BoardNumber WinningNumber { get; init; }
-    public GameBoard WinningBoard { get; init; }
+
+    ///<summar>
+    /// The index of the winning game board in the data set
+    ///</summary>
+    public int WinningGameBoardIndex { get; init; }
 }

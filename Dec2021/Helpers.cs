@@ -10,10 +10,9 @@ namespace Dec2021
 {
     public static class Helpers
     {
-        public static IReadOnlyList<string> ReadFileData(string filePath) =>
-            File.ReadAllLines(filePath)
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .ToImmutableArray();
+        public static async Task<IEnumerable<string>> ReadFileData(string filePath) =>
+            (await File.ReadAllLinesAsync(filePath))
+                .Where(line => !string.IsNullOrWhiteSpace(line));
 
         private const string RootGitRepoDec2021Folder =
             "https://raw.githubusercontent.com/danechambers/AdventOfCode2021/master/Dec2021";
