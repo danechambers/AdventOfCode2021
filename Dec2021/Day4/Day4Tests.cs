@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dec2021.Day4.Models;
 using NUnit.Framework;
-using Shouldly;
 using static Dec2021.Helpers;
 using static Dec2021.Day4.Day4Extensions;
 
@@ -16,50 +15,42 @@ namespace Dec2021.Day4;
 public class Day4Tests
 {
     private const int BINGO_SQUARE_LENGTH = 5;
+    private const string INPUT_FOLDER_FILE = "Day4/day4input";
 
-    [Test]
-    public async Task GameBoardReader_ShouldWork()
-    {
-        var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
+    private static readonly Lazy<Task<IReadOnlyList<string>>> getDay4Input =
+        new Lazy<Task<IReadOnlyList<string>>>(
+            () => GetDataUri(INPUT_FOLDER_FILE).GetDataAsync());
+    private static Task<IReadOnlyList<string>> Day4Input() => getDay4Input.Value;
 
-        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH);
+    [Test(ExpectedResult = 100)]
+    public async Task<int> GameBoardReader_ShouldWork() =>
+        (await Day4Input())
+            .GetGameBoards(BINGO_SQUARE_LENGTH)
+            .Count();
 
-        gameBoards.Count().ShouldBe(100);
-    }
+    [Test(ExpectedResult = 45031)]
+    public async Task<int> Part1() =>
+        (await Day4Input())
+            .GetBingoNumbers()
+            .FindWinningBoards(
+                (await Day4Input())
+                    .GetGameBoards(BINGO_SQUARE_LENGTH)
+                    .ToImmutableHashSet(),
+                BINGO_SQUARE_LENGTH)
+            .Select(CalculateAnswer)
+            .First();
 
-    [Test]
-    public async Task Part1()
-    {
-        var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
-        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableHashSet();
-
-        var answer =
-            fileData
-                .GetBingoNumbers()
-                .FindWinningBoards(gameBoards, BINGO_SQUARE_LENGTH)
-                .Select(CalculateAnswer)
-                .First();
-
-        TestContext.WriteLine($"The answer is {answer}");
-        answer.ShouldBe(45031);
-    }
-
-    [Test]
-    public async Task Part2()
-    {
-        var fileData = await GetDataUri("Day4/day4input").GetDataAsync();
-        var gameBoards = fileData.GetGameBoards(BINGO_SQUARE_LENGTH).ToImmutableHashSet();
-
-        var answer =
-            fileData
-                .GetBingoNumbers()
-                .FindWinningBoards(gameBoards, BINGO_SQUARE_LENGTH)
-                .Select(CalculateAnswer)
-                .Last();
-
-        TestContext.WriteLine($"The answer is {answer}");
-        answer.ShouldBe(2568);
-    }
+    [Test(ExpectedResult = 2568)]
+    public async Task<int> Part2() =>
+       (await Day4Input())
+            .GetBingoNumbers()
+            .FindWinningBoards(
+                (await Day4Input())
+                    .GetGameBoards(BINGO_SQUARE_LENGTH)
+                    .ToImmutableHashSet(),
+                BINGO_SQUARE_LENGTH)
+            .Select(CalculateAnswer)
+            .Last();
 }
 
 public static class Day4Extensions
@@ -96,7 +87,7 @@ public static class Day4Extensions
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => int.Parse(value.Trim()))
             .Select<int, BoardNumber>(value => new(value))
-            .Select((number, index) => (Number: number, ColumnIndex: index % bingoSquareLength))
+            .Select((number, index) => (Number: number, RowIndex: index % bingoSquareLength))
             .BoardGameIterator(bingoSquareLength);
 
     public static IEnumerable<BoardNumber> GetBingoNumbers(this IEnumerable<string> fileData) =>

@@ -10,7 +10,29 @@ namespace Dec01;
 public class Day1Tests
 {
     [Test]
-    public async Task Test1()
+    public async Task Part1()
+    {
+        var countOfIncreases = 0;
+        var fileData = await GetDataUri("Day1/day1input").GetDataAsync();
+
+        fileData
+            .Select(row =>
+            {
+                var value = int.Parse(row);
+                return value;
+            })
+            .Aggregate((current, next) =>
+            {
+                countOfIncreases += Day1Increment(current, next);
+                return next;
+            });
+
+        TestContext.WriteLine($"Number of increases is {countOfIncreases}");
+        countOfIncreases.ShouldBe(1832);
+    }
+
+    [Test]
+    public async Task Part2()
     {
         var countOfIncreases = 0;
 

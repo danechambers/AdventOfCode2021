@@ -12,24 +12,18 @@ namespace Dec2021.Day3
     [TestFixture]
     public class Day3Tests
     {
-        [Test]
-        public async Task Part1()
-        {
-            var answer =
-                (await GetDataUri("Day3/day3input")
-                    .GetDataAsync())
-                    .CreateDataTableFromFile()
-                    .SelectBits()
-                    .MapBitsToTablePosition()
-                    .FillDataTable()
-                    .GetBitCounts()
-                    .GetGammaBits()
-                    .GetGammaAndEpsilon()
-                    .AggregateGammaAndEpsilon();
-
-            TestContext.WriteLine($"The answer is {answer}");
-            answer.ShouldBe(1025636);
-        }
+        [Test(ExpectedResult = 1025636)]
+        public async Task<int> Part1() =>
+            (await GetDataUri("Day3/day3input")
+                .GetDataAsync())
+                .CreateDataTableFromFile()
+                .SelectBits()
+                .MapBitsToTablePosition()
+                .FillDataTable()
+                .GetBitCounts()
+                .GetGammaBits()
+                .GetGammaAndEpsilon()
+                .AggregateGammaAndEpsilon();
 
         [Test]
         public async Task Part2()
