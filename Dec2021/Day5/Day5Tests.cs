@@ -25,7 +25,7 @@ public class Day5Tests
             .GroupBy(segmentPoint => segmentPoint)
             .Count(pointGroup => pointGroup.Count() > 1);
 
-    [Test(ExpectedResult = -1)]
+    [Test(ExpectedResult = 20500)]
     public async Task<int> Part2() =>
         (await GetDataUri("Day5/day5input").GetDataAsync())
             .ReadLinePoints(
@@ -61,6 +61,12 @@ public class Day5ExtensionTests
     [TestCase("9,7 -> 7,7", "9,7|8,7|7,7")]
     [TestCase("7,7 -> 9,7", "9,7|8,7|7,7")]
     [TestCase("1,1 -> 1,1", "")]
+    [TestCase("1,1 -> 3,3", "1,1|2,2|3,3")]
+    [TestCase("3,3 -> 1,1", "1,1|2,2|3,3")]
+    [TestCase("8,0 -> 0,8", "8,0|7,1|6,2|5,3|4,4|3,5|2,6|1,7|0,8")]
+    [TestCase("7,9 -> 9,7", "9,7|8,8|7,9")]
+    [TestCase("6,4 -> 2,0", "6,4|5,3|4,2|3,1|2,0")]
+    [TestCase("5,5 -> 8,2", "5,5|6,4|7,3|8,2")]
     public void GetPointsBetweenSegments_ShouldWork(string test, string expected)
     {
         var expectedSegments = string.IsNullOrEmpty(expected)
@@ -73,10 +79,9 @@ public class Day5ExtensionTests
                 .SplitLineOnArrow()
                 .CreateLineEndPoints(dataPoint => dataPoint.CreateLinePoint())
                 .CreateLineSegment()
-                .Points
-                .ToHashSet();
+                .Points;
 
-        result.SetEquals(expectedSegments).ShouldBeTrue();
+        expectedSegments.ToHashSet().SetEquals(result).ShouldBeTrue();
     }
 
     [TestCase("1,1 -> 1,3", ExpectedResult = false)]
@@ -85,10 +90,11 @@ public class Day5ExtensionTests
     [TestCase("3,3 -> 1,1", ExpectedResult = true)]
     [TestCase("9,7 -> 7,9", ExpectedResult = true)]
     [TestCase("1,1 -> 1,1", ExpectedResult = false)]
+    [TestCase("6,4 -> 2,0", ExpectedResult = true)]
+    [TestCase("5,5 -> 8,2", ExpectedResult = true)]
     public bool Consider45DegreeAxis_ShouldWork(string test) =>
         Consider45DegreeAxis(test
             .SplitLineOnArrow()
-            .CreateLineEndPoints(dataPoint => 
+            .CreateLineEndPoints(dataPoint =>
                 dataPoint.CreateLinePoint()));
-            
 }

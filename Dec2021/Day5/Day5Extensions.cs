@@ -16,11 +16,10 @@ public static class Day5Extensions
         (segment.Start.x == segment.End.x || segment.Start.y == segment.End.y);
 
     public static bool Consider45DegreeAxis(LineEndPoints segment) =>
-        segment.Start != segment.End
-        && (segment.Start.x == segment.Start.y 
-        && segment.End.x == segment.End.y
-        || segment.Start.x == segment.End.y
-        && segment.Start.y == segment.End.x);
+        PointsAreDiagonalAt45Degrees(segment.Start, segment.End);
+
+    public static bool PointsAreDiagonalAt45Degrees(Point start, Point end) =>
+        start != end && Math.Abs(start.y - end.y) == Math.Abs(start.x - end.x);
 
     public static IEnumerable<LineEndPoints> ReadLinePoints(
             this IEnumerable<string> data,
@@ -70,15 +69,18 @@ public static class Day5Extensions
         var (startPoint, endPoint)
             when startPoint.x == endPoint.x && endPoint.y > startPoint.y =>
                 LineSegment<YAxisPositiveDirection>.Factory(endPoints),
-        var (startPoint, endPoint) 
+        var (startPoint, endPoint)
             when startPoint.x == endPoint.x && startPoint.y > endPoint.y =>
                 LineSegment<YAxisNegativeDirection>.Factory(endPoints),
-        var (startPoint, endPoint) 
+        var (startPoint, endPoint)
             when startPoint.y == endPoint.y && endPoint.x > startPoint.x =>
                 LineSegment<XAxisPositiveDirection>.Factory(endPoints),
-        var (startPoint, endPoint) 
+        var (startPoint, endPoint)
             when startPoint.y == endPoint.y && startPoint.x > endPoint.x =>
                 LineSegment<XAxisNegativeDirection>.Factory(endPoints),
-        _ => new NoLineSegment()
+        var (startPoint, endPoint)
+            when PointsAreDiagonalAt45Degrees(startPoint, endPoint) =>
+                LineSegment<DiagonalDirection>.Factory(endPoints),
+        _ => NoLineSegment.Data
     };
 }

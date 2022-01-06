@@ -14,8 +14,15 @@ public interface ILineSegment
     IEnumerable<Point> Points => Enumerable.Empty<Point>();
 }
 
-public class NoLineSegment : ILineSegment
+public sealed class NoLineSegment : ILineSegment
 {
+    public static NoLineSegment Data => SingletonInstance.Value;
+
+    private static Lazy<NoLineSegment> SingletonInstance =>
+        new Lazy<NoLineSegment>(() => new NoLineSegment());
+
+    private NoLineSegment()
+    { }
 }
 
 public class LineSegment<T> : ILineSegment where T : LineSegmentCoveredPoints
@@ -100,24 +107,28 @@ public class YAxisNegativeDirection : LineSegmentCoveredPoints
 
 public class DiagonalDirection : LineSegmentCoveredPoints
 {
+    private readonly int xIncrement;
+    private readonly int yIncrement;
+
     public DiagonalDirection(LineEndPoints lineEndPoints) : base(lineEndPoints)
     {
+        xIncrement = StartPoint.x > EndPoint.x ? -1 : 1;
+        yIncrement = StartPoint.y > EndPoint.y ? -1 : 1;
     }
 
-    protected override IEnumerable<Point> LineSegmentPoints => DiagonalIterator();
+    protected override IEnumerable<Point> LineSegmentPoints => LineSegmentIterator();
 
-    private IEnumerable<Point> DiagonalIterator()
+    private IEnumerable<Point> LineSegmentIterator()
     {
-        yield break;
-        // int xDirectionChange(){
-        //     if(StartPoint.x > EndPoint.x)
-        //         return StartPoint.x+1;
-        //     else
-        //         return 
-        // }
-        // while(true)
-        // {
-            
-        // }
+        var currentPoint = StartPoint;
+
+        do
+        {
+            yield return currentPoint;
+            currentPoint = currentPoint with
+            { x = currentPoint.x + xIncrement, y = currentPoint.y + yIncrement };
+        } while (currentPoint != EndPoint);
+
+        yield return EndPoint;
     }
 }

@@ -1,0 +1,17 @@
+triangle points
+5,5 -> 8,2
+5,5 -> 8,5 - dist is 3
+8,2 -> 5,8 - dist is 3
+
+x axis - new coordinate is 8,5 because 5 had to go up to 8, so increment 3
+y axis - 8,5 -> 8,2 - y increment is 3. this matches x increment
+
+6,4 -> 2,0
+
+x axis - new coordinate is 2,4 because 6 went down to 2, so decrement 4
+y axis - 2,4 -> 2,0 - y decrement 4
+
+1,1 - 3,3
+
+x axis - new coordinate is 3,1 because 1 had to go up to 3, so increment 2
+y axis - 3,1 -> 3,3 - y went up to 3, increment 2
