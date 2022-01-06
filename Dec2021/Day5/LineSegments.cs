@@ -97,3 +97,27 @@ public class YAxisNegativeDirection : LineSegmentCoveredPoints
             .Range(EndPoint.y, StartPoint.y - EndPoint.y + 1)
             .Select(y => new Point(StartPoint.x, y));
 }
+
+public class DiagonalDirection : LineSegmentCoveredPoints
+{
+    public DiagonalDirection(LineEndPoints lineEndPoints) : base(lineEndPoints)
+    {
+    }
+
+    protected override IEnumerable<Point> LineSegmentPoints => DiagonalIterator();
+
+    private IEnumerable<Point> DiagonalIterator()
+    {
+        yield break;
+        // int xDirectionChange(){
+        //     if(StartPoint.x > EndPoint.x)
+        //         return StartPoint.x+1;
+        //     else
+        //         return 
+        // }
+        // while(true)
+        // {
+            
+        // }
+    }
+}
