@@ -9,11 +9,11 @@ namespace Dec2021.Day6;
 [TestFixture]
 public class Day6Tests
 {
-    [Test(ExpectedResult = 5934)]
+    [Test(ExpectedResult = 365131)]
     public async Task<int> Part1()
     {
-        var fileData = await ReadFileData("/home/dane/Source/AdventOfCode2021/Dec2021/Day6/day6input");
+        var fileData = await GetDataUri("Day6/day6input").GetDataAsync();
         var allFish = fileData.First().Split(',').GetFish().ToImmutableList();
-        return allFish.RunAllCycles(80);
+        return allFish.RunAllCycles(80).Last().Count;
     }
 }
