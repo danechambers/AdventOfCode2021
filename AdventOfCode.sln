@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dec2021", "Dec2021\Dec2021.csproj", "{A260A6B7-20B4-4AF6-A512-A84CDB36119F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCruncher", "DataCruncher\DataCruncher.csproj", "{FBDDF4D0-574F-4451-ACC7-1AD177EBA330}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{A260A6B7-20B4-4AF6-A512-A84CDB36119F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A260A6B7-20B4-4AF6-A512-A84CDB36119F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A260A6B7-20B4-4AF6-A512-A84CDB36119F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBDDF4D0-574F-4451-ACC7-1AD177EBA330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBDDF4D0-574F-4451-ACC7-1AD177EBA330}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBDDF4D0-574F-4451-ACC7-1AD177EBA330}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBDDF4D0-574F-4451-ACC7-1AD177EBA330}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

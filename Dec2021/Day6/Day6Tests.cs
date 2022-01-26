@@ -10,6 +10,7 @@ namespace Dec2021.Day6;
 [TestFixture]
 public class Day6Tests
 {
+    [Ignore("Refactoring...")]
     [TestCase(80, TestName = "Part1", ExpectedResult = 365131)]
     // [TestCase(256, TestName = "Part2", ExpectedResult = 365131)]
     public async Task<int> Part1(int cycles)
@@ -19,6 +20,7 @@ public class Day6Tests
         return allFish.RunAllCycles(cycles).Last().Count;
     }
 
+    [Ignore("Refactoring...")]
     // [TestCase(80, TestName = "Part1.2", ExpectedResult = 365131)]
     // [TestCase(256, TestName = "Part2", ExpectedResult = 365131)]
     [Test(ExpectedResult = 365131)]
