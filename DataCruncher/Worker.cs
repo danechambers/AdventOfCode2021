@@ -8,7 +8,7 @@ public class Worker : BackgroundService
 
     public Worker(
         IEnumerable<IDataCruncher> dataCrunchers,
-        ILogger<Worker> logger, 
+        ILogger<Worker> logger,
         IHostApplicationLifetime appLifetime)
     {
         this.dataCrunchers = dataCrunchers;
@@ -18,12 +18,12 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var crunchTasks = 
+        var crunchTasks =
             dataCrunchers
                 .Select(cruncher => cruncher.Crunch(stoppingToken))
                 .ToList();
 
-        while(!stoppingToken.IsCancellationRequested && crunchTasks.Any())
+        while (!stoppingToken.IsCancellationRequested && crunchTasks.Any())
         {
             var finishedTask = await Task.WhenAny(crunchTasks);
             crunchTasks.Remove(finishedTask);

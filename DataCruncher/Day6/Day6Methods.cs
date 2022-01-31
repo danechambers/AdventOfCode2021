@@ -1,37 +1,42 @@
-using System.Collections.Concurrent;
 using static DataCruncher.Utility.Helpers;
 
 namespace DataCruncher.Day6;
 
- static class Day6Methods
+static class Day6Methods
 {
     public static IEnumerable<Fish> GetFish(this IEnumerable<string> values) =>
         values.Select(value => new Fish(int.Parse(value)));
 
     public static IEnumerable<Fish> RunAllCycles(
-        this IEnumerable<Fish> allFish, 
-        int cycles, 
-        CancellationToken? cancelToken = null)
+        this IEnumerable<Fish> allFish,
+        int cycles,
+        Func<Fish, IEnumerable<Fish>> spawnFish)
     {
-        while(cycles-- > 0)
+        while (cycles-- > 0)
         {
-            cancelToken?.ThrowIfCancellationRequested();
-            allFish = allFish.SelectMany(TrySpawnFish);
+            allFish = allFish.SelectMany(spawnFish);
         }
 
         return allFish;
     }
 
-    public static double CountTheFish(this IEnumerable<Fish> allFish)
+    public static async Task<double> CountTheFish(
+        this IEnumerable<Fish> allFish,
+        CancellationToken? cancelToken = null)
     {
         double fishCount = 0;
 
-        var allFishQuery = 
-            Partitioner.Create(allFish)
-                .AsParallel();
+        var computeTask =
+            cancelToken is CancellationToken realToken
+                ? Parallel.ForEachAsync(
+                    allFish,
+                    realToken,
+                    async (_, _) => await new ValueTask<double>(Increment(ref fishCount)))
+                : Parallel.ForEachAsync(
+                    allFish,
+                    async (_, _) => await new ValueTask<double>(Increment(ref fishCount)));
 
-        allFishQuery.ForAll(fish => Increment(ref fishCount));
-
+        await computeTask;
         return fishCount;
     }
 
