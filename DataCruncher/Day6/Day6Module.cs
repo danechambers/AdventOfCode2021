@@ -13,7 +13,7 @@ public class Day6Module : Module
             .SingleInstance();
 
         builder
-            .RegisterType<Day6Part2>()
+            .RegisterType<TheBestCruncher>()
             .As<IDataCruncher>()
             .SingleInstance();
     }

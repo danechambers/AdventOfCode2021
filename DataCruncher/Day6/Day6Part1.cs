@@ -44,3 +44,30 @@ public class Day6Part2 : IDataCruncher
         return Result.Success(count);
     }
 }
+
+public class TheBestCruncher : IDataCruncher
+{
+    private readonly Day6Data day6Data;
+
+    public TheBestCruncher(Day6Data day6Data)
+    {
+        this.day6Data = day6Data;
+    }
+
+    public async Task<Result> Crunch(CancellationToken? cancelToken = null)
+    {
+        var data = await day6Data.GetDataFromGithub();
+        var fishStates = new FishStates();
+        foreach (var fishTimer in data.First().Split(',').Select(value => int.Parse(value)))
+        {
+            fishStates.Add(fishTimer);
+        }
+
+        for (var i = 0; i < 256; i++)
+        {
+            fishStates.Iterate();
+        }
+
+        return Result.Success(fishStates.FishCount);
+    }
+}
