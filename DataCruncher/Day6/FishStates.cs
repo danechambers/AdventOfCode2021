@@ -7,15 +7,14 @@ public class FishStates
     {
         IncrementCount(fishCounts, timer, 1);
     }
-    // public void Add(int timer, int count)
-    // {
-    //     IncrementCount(fishCounts, timer, count);
-    // }
+
     public void Iterate()
     {
         fishCounts = GetNextState();
     }
+
     public long FishCount => fishCounts.Values.Sum();
+
     private static void IncrementCount(Dictionary<int, long> dict, int key, long incValue)
     {
         if (!dict.ContainsKey(key))
@@ -27,6 +26,7 @@ public class FishStates
             dict[key] += incValue;
         }
     }
+
     private Dictionary<int, long> GetNextState()
     {
         var newState = new Dictionary<int, long>();
@@ -45,4 +45,3 @@ public class FishStates
         return newState;
     }
 }
-// new FishStates() { { 3, 2 }, 4, 2, 1 };

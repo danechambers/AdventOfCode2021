@@ -57,17 +57,18 @@ public class TheBestCruncher : IDataCruncher
     public async Task<Result> Crunch(CancellationToken? cancelToken = null)
     {
         var data = await day6Data.GetDataFromGithub();
-        var fishStates = new FishStates();
-        foreach (var fishTimer in data.First().Split(',').Select(value => int.Parse(value)))
-        {
-            fishStates.Add(fishTimer);
-        }
+        var initialFishState = data.First()
+            .Split(',')
+            .GetFish()
+            .CountInitialFish()
+            .AssessStateOfFish();
 
-        for (var i = 0; i < 256; i++)
-        {
-            fishStates.Iterate();
-        }
+        var finalFishState = Enumerable.Range(1, 256)
+            .Aggregate(
+                initialFishState,
+                (fishState, _) => fishState.SpawnNewFish().AssessStateOfFish());
 
-        return Result.Success(fishStates.FishCount);
+        var finalFishCount = finalFishState.Values.Sum();
+        return Result.Success(finalFishCount);
     }
 }

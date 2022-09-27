@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using static DataCruncher.Utility.Helpers;
 
 namespace DataCruncher.Day6;
@@ -55,5 +56,27 @@ static class Day6Methods
             yield return ResetFish();
             yield return NewBornFish();
         }
+    }
+
+    public static IEnumerable<FishCount> CountInitialFish(this IEnumerable<Fish> fish) =>
+        fish.Select( aFish => new FishCount(aFish, 1));
+
+    public static IEnumerable<FishCount> SpawnNewFish(this IReadOnlyDictionary<Fish, long> fishState) =>
+        fishState
+            .SelectMany(
+                state => state.Key.TrySpawnFish(),
+                (state, newFish) => new FishCount(newFish, state.Value));
+
+    public static ImmutableDictionary<Fish, long> AssessStateOfFish(this IEnumerable<FishCount> fishCounts)
+    {
+        var fishStateBuilder = ImmutableDictionary.CreateBuilder<Fish, long>();
+        foreach(var fishCount in fishCounts)
+        {
+            if(fishStateBuilder.ContainsKey(fishCount.Fish))
+                fishStateBuilder[fishCount.Fish] += fishCount.Count;
+            else
+                fishStateBuilder[fishCount.Fish] = fishCount.Count;
+        }
+        return fishStateBuilder.ToImmutableDictionary();
     }
 }
